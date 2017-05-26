@@ -2,6 +2,7 @@
 
 import getpass
 import logging
+import calendar
 import dbops
 logging.basicConfig(level=logging.DEBUG)
 DBCLASS = dbops.DbOperations()
@@ -41,6 +42,7 @@ class UserLogin(object):
                     pwdcount += 1
                     if pwd == self.pwdlist[index1]:
                         logging.info("user logged in successfully")
+                        return True
                         break
                 else:
                     logging.error("3 password attemps failed")
@@ -54,4 +56,20 @@ class UserLogin(object):
 
 if __name__ == "__main__":
     USERLOGINCL = UserLogin()
-    DATA = USERLOGINCL.validate()
+    validated = USERLOGINCL.validate()
+    while validated:
+        print "enter 1 for WFH or\nenter 2 for Leaves or\nenter 3 to Display calendar or \nenter 'X' to logout"
+        option = raw_input("option : ")
+        if option == "1":
+            logging.info("code under progress")
+            pass
+        elif option == "2":
+            logging.info("code under progress")
+            pass
+        elif option == "3":
+            year = input("enter the year : ")
+            month = input("enter the number of month : ")
+            print calendar.month(year,month)
+        elif option == 'X' or option =='x':
+            logging.info("succesfully logged out")
+            break
