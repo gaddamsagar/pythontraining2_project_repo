@@ -14,8 +14,8 @@ class DbOperations(object):
         """This module connects to the db and returns the cursor for\
         dboperatios"""
         dbcon = MySQLdb.connect(host, user, pwd, dbname)
-        cursor = dbcon.cursor()
-        return cursor
+        #cursor = dbcon.cursor()
+        return dbcon#cursor
 
     def create_table(self, query, cur):
         """This module takes a query and cursor as argumnets and \
@@ -28,11 +28,12 @@ class DbOperations(object):
             logging.exception(err)
             return False
 
-    def insert(self, query, cur):
+    def insert(self, query, cur,dbcon):
         """This module takes query and cursor and inserts data into table"""
         try:
             cur.execute(query)
             logging.info("inserting data into table")
+            dbcon.commit()
             return True
         except Exception as err:
             logging.exception(err)
@@ -57,10 +58,19 @@ if __name__ == "__main__":
     USER = "root"
     PWD = "nexii"
     DBNAME = "leave_mgmt"
-    CUR = DBCLASS.getconnection(HOST, USER, PWD, DBNAME)
+    dbcon = DBCLASS.getconnection(HOST, USER, PWD, DBNAME)
+    CUR = dbcon.cursor()
     TBNAME = "emp_details"
     BROWSEQUERY = "select * from {0}".format(TBNAME)
     DATA = DBCLASS.browse(BROWSEQUERY, CUR)
-    logging.info("Reading table header")
+    logging.info("Reading header from table '{0}'".format(TBNAME))    
+    HEADER = [description[0] for description in CUR.description]
+    print tabulate(DATA, HEADER)+"\n"
+    TBNAME = "credentials"
+    BROWSEQUERY = "select * from {0}".format(TBNAME)
+    DATA = DBCLASS.browse(BROWSEQUERY, CUR)
+    logging.info("Reading header from table '{0}'".format(TBNAME))
     HEADER = [description[0] for description in CUR.description]
     print tabulate(DATA, HEADER)
+
+    dbcon.close()
