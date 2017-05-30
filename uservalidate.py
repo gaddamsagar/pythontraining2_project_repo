@@ -4,11 +4,14 @@ import getpass
 import logging
 import calendar
 from datetime import datetime
+from tabulate import tabulate
 import dbops
 import emailmodule
+import wfh
 logging.basicConfig(level=logging.DEBUG)
 DBCLASS = dbops.DbOperations()
 EMAILCLASS = emailmodule.EmailClass()
+WFHCLASS = wfh.Wfh()
 
 
 class UserLogin(object):
@@ -48,7 +51,7 @@ class UserLogin(object):
                     if pwd == self.pwdlist[index1]:
                         logging.info("user logged in successfully")
                         if self.mgrlist[index1] == "yes":
-                            print "manager logged in"
+                            logging.info("manager logged in")
                             pass
                             return False, user, self.dbcon
                         else:
@@ -116,75 +119,23 @@ select 2 to check status of wfh\nselect 3 to go back to main menu"
                         elif days == 1:
                             wfhdate = raw_input("enter date (yyyy-mm-dd): ")
                             fromdate, todate = wfhdate, wfhdate
-                            managerquery = "select manager from emp_details \
-where empname = '{0}'".format(user)
-                            manager = DBCLASS.browse(managerquery, self.cur)
-                            leavetype, status = 'wfh', 'pending'
-                            fromdate, todate = wfhdate, wfhdate
-                            emailquery = "select emailid from emp_details \
-where empname = '{0}'".format(manager[0][0])
-                            manageremail = DBCLASS.browse(emailquery, self.cur)
-                            getidsquery = "select id from requests"
-                            idslist = DBCLASS.browse(getidsquery, self.cur)
-                            newid = idslist[len(idslist)-1][0]+1
-                            insertquery = "insert into requests values \
-                            ({0},'{1}','{2}','{3}',{4},'{5}','{6}','{7}')\
-".format(newid, manager[0][0], user, leavetype, days, fromdate, todate, status)
-                            try:
-                                DBCLASS.insert(insertquery, self.cur, dbcon)
-                            except Exception as err:
-                                logging.exception(err)
-                            subject = "Subject: request id {0}: {1}\'s {2}\
- request".format(newid, user, leavetype)
-                            body = "{0} has applied for {1} on {2}\n Please\
- login to approve/reject the request".format(user, leavetype, wfhdate)
-                            msg = subject+"\n"+body
-                            try:
-                                EMAILCLASS.sendemail(msg, manageremail)
-                            except Exception as err:
-                                logging.exception(err)
+                            WFHCLASS.applyworkfromhome(self.cur, dbcon, user, days, fromdate, todate)
                             break
-                        elif days > 1 or days < 5:
+                        elif days > 1 and days < 6:
                             fromdate = raw_input("enter from date (yyyy-mm\
 -dd): ")
                             todate = raw_input("enter to date (yyyy-mm-dd)\
 : ")
-                            managerquery = "select manager from emp_details\
- where empname = '{0}'".format(user)
-                            manager = DBCLASS.browse(managerquery, self.cur)
-                            leavetype, status = 'wfh', 'pending'
-                            emailquery = "select emailid from emp_details \
-where empname = '{0}'".format(manager[0][0])
-                            manageremail = DBCLASS.browse(emailquery, self.cur)
-                            getidsquery = "select id from requests"
-                            idslist = DBCLASS.browse(getidsquery, self.cur)
-                            newid = idslist[len(idslist)-1][0]+1
-                            insertquery = "insert into requests values \
-({0},'{1}','{2}','{3}',{4},'{5}','{6}','{7}')\
-".format(newid, manager[0][0], user, leavetype, days, fromdate, todate, status)
-                            try:
-                                DBCLASS.insert(insertquery, self.cur, dbcon)
-                            except Exception as err:
-                                logging.exception(err)
-                            subject = "Subject: request id {0}: {1}\'s {2}\
- request".format(newid, user, leavetype)
-                            body = "{0} has applied for {1} from {2} to \
-{3}\n\nPlease login to approve/reject the request\
-".format(user, leavetype, fromdate, todate)
-                            msg = subject+"\n"+body
-                            try:
-                                EMAILCLASS.sendemail(msg, manageremail)
-                            except Exception as err:
-                                logging.exception(err)
+                            WFHCLASS.applyworkfromhome(self.cur, dbcon, user, days, fromdate, todate)
                             break
+                        else:
+                            logging.error("Maximum allowed is 5, try again")
+                            continue
                     except Exception as err:
                         logging.exception(err)
                         continue
             elif option == '2':
-                browsequery = "select * from request where empname = '{0}'".format(user)
-                resp = DBCLASS.browse(browsequery, self.cur)
-                pass
-                return True
+                WFHCLASS.checkwfhstatus(user, self.cur)
 
             elif option == '3':
                 return True

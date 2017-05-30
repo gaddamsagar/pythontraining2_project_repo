@@ -28,7 +28,7 @@ class DbOperations(object):
             logging.exception(err)
             return False
 
-    def insert(self, query, cur,dbcon):
+    def insert(self, query, cur, dbcon):
         """This module takes query and cursor and inserts data into table"""
         try:
             cur.execute(query)

@@ -15,6 +15,7 @@ class EmailClass(object):
             server.starttls()
             server.login(ADMINEMAILID, ADMINEMAILPWD)
             server.sendmail(ADMINEMAILID, toemail, msg)
+            logging.info("email sent succesfully to {0}".format(toemail))
             return True
         except Exception as err:
             logging.exception(err)
